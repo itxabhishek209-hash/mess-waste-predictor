@@ -1,0 +1,76 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user in the system (Student or Admin)",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "createdAt": { "type": "integer" }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "MealBooking": {
+      "title": "Meal Booking",
+      "description": "Student's meal booking for a day",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
+        "willEat": { "type": "boolean" },
+        "mealType": { "type": "string", "enum": ["breakfast", "lunch", "dinner", "all"] },
+        "updatedAt": { "type": "integer" }
+      },
+      "required": ["userId", "date", "willEat", "mealType", "updatedAt"]
+    },
+    "WasteRecord": {
+      "title": "Waste Record",
+      "description": "Daily food waste record",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
+        "riceKg": { "type": "number" },
+        "dalKg": { "type": "number" },
+        "rotiKg": { "type": "number" },
+        "curryKg": { "type": "number" },
+        "totalWasteKg": { "type": "number" },
+        "addedBy": { "type": "string" },
+        "createdAt": { "type": "integer" }
+      },
+      "required": ["date", "totalWasteKg", "addedBy", "createdAt"]
+    },
+    "Menu": {
+      "title": "Menu",
+      "description": "Daily menu",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
+        "items": { "type": "array", "items": { "type": "string" } },
+        "updatedBy": { "type": "string" },
+        "updatedAt": { "type": "integer" }
+      },
+      "required": ["date", "items", "updatedBy", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles. Includes roles like student or admin."
+    },
+    "mealBookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/MealBooking" },
+      "description": "Daily meal bookings by students."
+    },
+    "wasteRecords/{recordId}": {
+      "schema": { "$ref": "#/entities/WasteRecord" },
+      "description": "Records of daily food waste."
+    },
+    "menus/{date}": {
+      "schema": { "$ref": "#/entities/Menu" },
+      "description": "Daily menus."
+    }
+  }
+}

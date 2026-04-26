@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Basic helpers
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; 
+    }
+    
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Users
+    match /users/{userId} {
+      // Anyone can create their profile when they sign up
+      allow create: if isSignedIn() && request.auth.uid == userId 
+        && request.resource.data.uid == userId 
+        && request.resource.data.role == 'student' // Cannot create self as admin
+        && request.resource.data.keys().hasAll(['uid', 'name', 'email', 'role', 'createdAt']);
+        
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow update: if isSignedIn() && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'updatedAt', 'role']);
+    }
+    
+    // Meal Bookings
+    match /mealBookings/{bookingId} {
+      allow create: if isSignedIn() 
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['userId', 'date', 'willEat', 'mealType', 'updatedAt']);
+      
+      allow read: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['willEat', 'updatedAt']);
+        
+      // Admins can read all for prediction
+      allow list: if isAdmin();
+    }
+    
+    // Waste Records
+    match /wasteRecords/{recordId} {
+      allow create, update, delete: if isAdmin();
+      allow read: if isSignedIn(); // Students can see waste stats too
+    }
+    
+    // Menus
+    match /menus/{date} {
+      allow create, update, delete: if isAdmin();
+      allow read: if isSignedIn();
+    }
+  }
+}
